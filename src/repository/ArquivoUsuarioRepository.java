@@ -1,9 +1,10 @@
 package repository;
 
-import model.Usuario;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
+
+import model.Usuario;
 
 public class ArquivoUsuarioRepository implements UsuarioRepository {
 
