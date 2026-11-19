@@ -2,17 +2,14 @@ package model;
 
 import java.time.LocalDate;
 
-import model.Profissional;
-
 public class Relatorio {
-
-    private Profissional profissional;
-    private LocalDate inicio;
-    private LocalDate fim;
-    private double receitaTotal;
-    private int qtdNormal;
-    private int qtdPlano;
-    private int qtdRetorno;
+    private final Profissional profissional;
+    private final LocalDate inicio;
+    private final LocalDate fim;
+    private final double receitaTotal;
+    private final int qtdNormal;
+    private final int qtdPlano;
+    private final int qtdRetorno;
 
     public Relatorio(Profissional profissional, LocalDate inicio, LocalDate fim,
             double receitaTotal, int qtdNormal, int qtdPlano, int qtdRetorno) {
