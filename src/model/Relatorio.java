@@ -14,8 +14,8 @@ public class Relatorio {
     private int qtdPlano;
     private int qtdRetorno;
 
-    public Relatorio(Profissional profissional, LocalDate inicio, LocalDate fim, double receitaTotal, int qtdNormal,
-            int qtdPlano, int qtdRetorno) {
+    public Relatorio(Profissional profissional, LocalDate inicio, LocalDate fim,
+            double receitaTotal, int qtdNormal, int qtdPlano, int qtdRetorno) {
         this.profissional = profissional;
         this.inicio = inicio;
         this.fim = fim;
