@@ -1,7 +1,10 @@
 package model.exception;
 
 public class CredenciaisInvalidasException extends ClinicaException {
-    public CredenciaisInvalidasException(String msg) {
-        super(msg);
+
+    private static final long serialVersionUID = 1L;
+
+    public CredenciaisInvalidasException(String mensagem) {
+        super(mensagem);
     }
 }
