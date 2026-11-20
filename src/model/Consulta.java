@@ -4,7 +4,7 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
-import model.exceptions.DadosInvalidosException;
+import model.exception.DadosInvalidosException;
 
 public abstract class Consulta implements Serializable{
 
