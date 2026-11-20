@@ -14,7 +14,7 @@ public abstract class Consulta implements Serializable{
     private final int id;
     private final Paciente paciente;
     private final Profissional profissional;
-    private final LocalDateTime dataHora;
+    private LocalDateTime dataHora;
     private StatusConsulta status;
 
     protected Consulta(int id, Paciente paciente, Profissional profissional, LocalDateTime dataHora) throws DadosInvalidosException {
@@ -77,7 +77,7 @@ public abstract class Consulta implements Serializable{
         if (dataHora == null) {
             throw new DadosInvalidosException("A data e hora da consulta são obrigatórias.");
         }
-    
+    }
     // ---------- Métodos de acesso ----------
     
     public int getId() {
