@@ -4,7 +4,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
-
 import model.Consulta;
 import model.ConsultaRetorno;
 import model.Paciente;
@@ -37,10 +36,12 @@ public class RetornoCreator extends ConsultaCreator {
         if (dias < 0) {
             throw new RetornoForaDoPrazoException("O retorno precisa ser marcado depois da última consulta realizada.");
         }
+        
         if (dias > PRAZO_DIAS) {
             throw new RetornoForaDoPrazoException("O retorno só é permitido até " + PRAZO_DIAS
                     + " dias após a última consulta realizada (já se passaram " + dias + " dias).");
         }
+        
         return new ConsultaRetorno(id, paciente, profissional, dataHora);
     }
 
