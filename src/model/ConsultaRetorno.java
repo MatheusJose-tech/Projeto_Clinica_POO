@@ -1,13 +1,12 @@
 package model;
 
 import java.time.LocalDateTime;
-
 import model.exception.DadosInvalidosException;
 
 public class ConsultaRetorno extends Consulta {
 
     private static final long serialVersionUID = 1L;
-
+    private static final double VALOR = 0.0;
     private static final int DURACAO = 20;
 
     public ConsultaRetorno(int id, Paciente paciente, Profissional profissional, LocalDateTime dataHora) throws DadosInvalidosException {
@@ -16,7 +15,7 @@ public class ConsultaRetorno extends Consulta {
 
     @Override
     public double calcularValor() {
-        return 0.0;
+        return VALOR;
     }
 
     @Override
