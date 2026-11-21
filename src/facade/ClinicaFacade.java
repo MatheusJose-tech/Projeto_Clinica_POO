@@ -1,19 +1,29 @@
 package facade;
 
+import java.util.List;
+
 import model.Paciente;
+import model.Profissional;
 import model.Usuario;
+
+import model.exception.ClinicaException;
 import model.exception.CredenciaisInvalidasException;
+import model.exception.DadosInvalidosException;
 
 import repository.PacienteRepository;
+import repository.ProfissionalRepository;
 import repository.UsuarioRepository;
 
 public class ClinicaFacade {
 
     private PacienteRepository pacienteRepo;
+    private ProfissionalRepository profissionalRepo;
     private UsuarioRepository usuarioRepo;
 
-    public ClinicaFacade(PacienteRepository pacienteRepo, UsuarioRepository usuarioRepo) {
+    public ClinicaFacade(PacienteRepository pacienteRepo, ProfissionalRepository profissionalRepo,
+            UsuarioRepository usuarioRepo) {
         this.pacienteRepo = pacienteRepo;
+        this.profissionalRepo = profissionalRepo;
         this.usuarioRepo = usuarioRepo;
     }
 
@@ -62,5 +72,38 @@ public class ClinicaFacade {
         }
 
         pacienteRepo.remover(cpf);
+    }
+
+    public void cadastrarProfissional(String nome, String cpf, String especialidade) throws DadosInvalidosException {
+        if (profissionalRepo.buscarPorCpf(cpf) != null) {
+            throw new DadosInvalidosException("Já existe um profissional cadastrado com este CPF.");
+        }
+
+        Profissional novoProfissional = new Profissional(nome, cpf, especialidade);
+        profissionalRepo.salvar(novoProfissional);
+    }
+
+    public List<Profissional> listarProfissionais() {
+        return profissionalRepo.listar();
+    }
+
+    public void alterarProfissional(String cpf, String nome, String especialidade) throws DadosInvalidosException {
+        Profissional profissional = profissionalRepo.buscarPorCpf(cpf);
+        if (profissional == null) {
+            throw new DadosInvalidosException("Profissional não encontrado.");
+        }
+
+        profissional.setNome(nome);
+        profissional.setEspecialidade(especialidade);
+        profissionalRepo.salvar(profissional);
+    }
+
+    public void removerProfissional(String cpf) throws DadosInvalidosException {
+        Profissional profissional = profissionalRepo.buscarPorCpf(cpf);
+        if (profissional == null) {
+            throw new DadosInvalidosException("Profissional não encontrado.");
+        }
+
+        profissionalRepo.remover(cpf);
     }
 }
