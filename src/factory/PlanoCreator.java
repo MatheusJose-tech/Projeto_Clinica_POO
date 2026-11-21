@@ -2,7 +2,6 @@ package factory;
 
 import java.time.LocalDateTime;
 import java.util.List;
-
 import model.Consulta;
 import model.ConsultaPlano;
 import model.Paciente;
@@ -18,9 +17,11 @@ public class PlanoCreator extends ConsultaCreator {
         if (paciente == null) {
             throw new DadosInvalidosException("O paciente da consulta é obrigatório.");
         }
+        
         if (!paciente.temPlano()) {
             throw new DadosInvalidosException("O paciente " + paciente.getNome() + " não possui plano de saúde cadastrado.");
         }
+        
         return new ConsultaPlano(id, paciente, profissional, dataHora);
     }
 }

@@ -3,7 +3,6 @@ package factory;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-
 import model.Consulta;
 import model.Paciente;
 import model.Profissional;
@@ -26,6 +25,7 @@ public abstract class ConsultaCreator {
     protected abstract Consulta criarConsulta(int id, Paciente paciente, Profissional profissional, LocalDateTime dataHora, List<Consulta> historico) throws ClinicaException;
 
     private void validarHorario(Profissional profissional, LocalDateTime dataHora, List<Consulta> historico) throws ClinicaException {
+        
         if (profissional == null && dataHora == null) {
             throw new DadosInvalidosException("Profissional e data/hora da consulta são obrigatórios.");
         }
