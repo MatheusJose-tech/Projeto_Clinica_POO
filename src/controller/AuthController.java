@@ -1,5 +1,7 @@
 package controller;
 import facade.ClinicaFacade;
+import model.Usuario;
+import model.exception.ClinicaException;
 
 public class AuthController {
     private final ClinicaFacade facade;
