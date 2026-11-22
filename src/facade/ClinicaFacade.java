@@ -1,15 +1,27 @@
 package facade;
 
+import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import factory.ConsultaCreator;
+import factory.NormalCreator;
+import factory.PlanoCreator;
+import factory.RetornoCreator;
+
+import model.Consulta;
 import model.Paciente;
 import model.Profissional;
+import model.StatusConsulta;
 import model.Usuario;
 
 import model.exception.ClinicaException;
 import model.exception.CredenciaisInvalidasException;
 import model.exception.DadosInvalidosException;
+import model.exception.HorarioIndisponivelException;
 
+import repository.ConsultaRepository;
 import repository.PacienteRepository;
 import repository.ProfissionalRepository;
 import repository.UsuarioRepository;
@@ -18,13 +30,22 @@ public class ClinicaFacade {
 
     private PacienteRepository pacienteRepo;
     private ProfissionalRepository profissionalRepo;
+    private ConsultaRepository consultaRepo;
     private UsuarioRepository usuarioRepo;
+    private Map<String, ConsultaCreator> creators;
 
     public ClinicaFacade(PacienteRepository pacienteRepo, ProfissionalRepository profissionalRepo,
+            ConsultaRepository consultaRepo,
             UsuarioRepository usuarioRepo) {
         this.pacienteRepo = pacienteRepo;
         this.profissionalRepo = profissionalRepo;
+        this.consultaRepo = consultaRepo;
         this.usuarioRepo = usuarioRepo;
+
+        this.creators = new HashMap<>();
+        this.creators.put("NORMAL", new NormalCreator());
+        this.creators.put("PLANO", new PlanoCreator());
+        this.creators.put("RETORNO", new RetornoCreator());
     }
 
     public Usuario autenticar(String login, String senha) throws CredenciaisInvalidasException {
@@ -105,5 +126,74 @@ public class ClinicaFacade {
         }
 
         profissionalRepo.remover(cpf);
+    }
+
+    public Consulta agendar(String tipo, String cpfPaciente, String cpfProfissional, LocalDateTime dataHora)
+            throws ClinicaException {
+        if (tipo == null) {
+            throw new DadosInvalidosException("Tipo de consulta obrigatório.");
+        }
+
+        ConsultaCreator creator = creators.get(tipo.trim().toUpperCase());
+        if (creator == null) {
+            throw new DadosInvalidosException("Tipo de consulta inválido: " + tipo);
+        }
+
+        Paciente paciente = pacienteRepo.buscarPorCpf(cpfPaciente);
+        if (paciente == null) {
+            throw new DadosInvalidosException("Paciente não encontrado.");
+        }
+
+        Profissional profissional = profissionalRepo.buscarPorCpf(cpfProfissional);
+        if (profissional == null) {
+            throw new DadosInvalidosException("Profissional não encontrado.");
+        }
+
+        int novoId = consultaRepo.proximoId();
+        List<Consulta> historico = consultaRepo.listar();
+
+        Consulta novaConsulta = creator.criar(novoId, paciente, profissional, dataHora, historico);
+        consultaRepo.salvar(novaConsulta);
+
+        return novaConsulta;
+    }
+
+    public List<Consulta> listarConsultas() {
+        return consultaRepo.listar();
+    }
+
+    public void cancelarConsulta(int id) throws ClinicaException {
+        Consulta consulta = consultaRepo.buscarPorId(id);
+        if (consulta == null) {
+            throw new DadosInvalidosException("Consulta não encontrada.");
+        }
+
+        consulta.cancelar();
+        consultaRepo.salvar(consulta);
+    }
+
+    public void remarcarConsulta(int id, LocalDateTime novaDataHora) throws ClinicaException {
+        Consulta consulta = consultaRepo.buscarPorId(id);
+        if (consulta == null) {
+            throw new DadosInvalidosException("Consulta não encontrada.");
+        }
+
+        if (novaDataHora == null) {
+            throw new DadosInvalidosException("A nova data e hora são obrigatórias.");
+        }
+
+        String cpfProfissional = consulta.getProfissional().getCpf();
+        for (Consulta outra : consultaRepo.listar()) {
+            boolean mesmoProfissional = outra.getProfissional().getCpf().equals(cpfProfissional);
+            boolean mesmoHorario = outra.getDataHora().equals(novaDataHora);
+            boolean bloqueio = outra.getStatus() == StatusConsulta.AGENDADA;
+
+            if (outra.getId() != consulta.getId() && mesmoProfissional && mesmoHorario && bloqueio) {
+                throw new HorarioIndisponivelException("O profissional já possui uma consulta agendada neste horário.");
+            }
+        }
+
+        consulta.remarcar(novaDataHora);
+        consultaRepo.salvar(consulta);
     }
 }
