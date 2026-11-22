@@ -1,5 +1,6 @@
 package facade;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
@@ -13,6 +14,7 @@ import factory.RetornoCreator;
 import model.Consulta;
 import model.Paciente;
 import model.Profissional;
+import model.Relatorio;
 import model.StatusConsulta;
 import model.Usuario;
 
@@ -195,5 +197,53 @@ public class ClinicaFacade {
 
         consulta.remarcar(novaDataHora);
         consultaRepo.salvar(consulta);
+    }
+
+    public Relatorio gerarRelatorio(String cpfProfissional, LocalDate inicio, LocalDate fim) throws ClinicaException {
+        Profissional profissional = profissionalRepo.buscarPorCpf(cpfProfissional);
+        if (profissional == null) {
+            throw new DadosInvalidosException("Profissional não encontrado.");
+        }
+
+        if (inicio == null || fim == null) {
+            throw new DadosInvalidosException("As datas inicial e final são obrigatórias.");
+        }
+
+        if (inicio.isAfter(fim)) {
+            throw new DadosInvalidosException("Periodo inválido: a data inicial não pode ser posterior a data final.");
+        }
+
+        double receitaTotal = 0.0;
+        int qtdNormal = 0;
+        int qtdPlano = 0;
+        int qtdRetorno = 0;
+
+        for (Consulta c : consultaRepo.listar()) {
+            if (c.getStatus() == StatusConsulta.CANCELADA) {
+                continue;
+            }
+
+            if (!c.getProfissional().getCpf().equals(cpfProfissional)) {
+                continue;
+            }
+
+            LocalDate dataConsulta = c.getDataHora().toLocalDate();
+            if (dataConsulta.isBefore(inicio) || dataConsulta.isAfter(fim)) {
+                continue;
+            }
+
+            receitaTotal += c.calcularValor();
+
+            String tipo = c.getTipo();
+            if ("Normal".equalsIgnoreCase(tipo)) {
+                qtdNormal++;
+            } else if ("Plano".equalsIgnoreCase(tipo)) {
+                qtdPlano++;
+            } else if ("Retorno".equalsIgnoreCase(tipo)) {
+                qtdRetorno++;
+            }
+        }
+
+        return new Relatorio(profissional, inicio, fim, receitaTotal, qtdNormal, qtdPlano, qtdRetorno);
     }
 }
