@@ -1,1 +1,22 @@
-/bin/
+# Arquivos compilados (Java)
+out/
+bin/
+*.class
+fontes.txt
+
+# Dados serializados e temporários gerados em teste (mantém o .gitkeep)
+data/*.dat
+data/*.tmp
+data/*.bak
+
+# Configurações de IDEs (VS Code, IntelliJ, Eclipse)
+.vscode/
+.idea/
+*.iml
+.classpath
+.project
+.settings/
+
+# Arquivos temporários do Sistema Operacional
+.DS_Store
+Thumbs.db
