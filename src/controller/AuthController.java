@@ -8,8 +8,9 @@ public class AuthController {
         this.facade = facade;
     }
 
-    public void autenticar(String usuario, String senha) {
-        facade.autenticar(usuario, senha);
-  
+    public Usuario autenticar(String usuario, String senha) throws ClinicaException {
+        return facade.autenticar(usuario, senha);
+
     }
+    
 }

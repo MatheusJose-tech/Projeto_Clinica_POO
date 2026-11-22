@@ -12,17 +12,17 @@ public class ConsultaController {
     public Consulta agendar(String tipo, String cpfPaciente, String cpfProf, LocalDateTime dataHora) {
         return facade.agendar(tipo, cpfPaciente, cpfProf, dataHora);
     }
-    public void cancelar(int id) {
+    public void cancelar(int id) throws ClinicaException {
         facade.cancelarConsulta(id);
     }
     public List<Consulta> listar() {
         return facade.listarConsultas();
     }
-    public void remarcar(int id, LocalDateTime novaDataHora) {
+    public void remarcar(int id, LocalDateTime novaDataHora) throws ClinicaException {
         facade.remarcarConsulta(id, novaDataHora);
     }
-    public Relatorio gerarRelatorio(String cpfProf, LocalDateTime inicio, LocalDateTime fim) {
-        return facade.gerarRelatorioConsultas(cpfProf, inicio, fim);
+    public Relatorio gerarRelatorio(String cpfProf, LocalDateTime inicio, LocalDateTime fim) throws ClinicaException {
+        return facade.gerarRelatorio(cpfProf, inicio, fim);
     }
 
 
