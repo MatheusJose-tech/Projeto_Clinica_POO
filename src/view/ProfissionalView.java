@@ -1,9 +1,8 @@
 package view;
 
+import controller.ProfissionalController;
 import java.util.List;
 import java.util.Scanner;
-
-import controller.ProfissionalController;
 import model.Profissional;
 import model.exception.ClinicaException;
 
@@ -20,6 +19,7 @@ public class ProfissionalView {
     public void exibirMenu() {
         int opcao;
         do {
+            leitor.limparTela();
             System.out.println();
             System.out.println("===== PROFISSIONAIS =====");
             System.out.println("1 - Cadastrar");
@@ -40,6 +40,10 @@ public class ProfissionalView {
                 }
             } catch (ClinicaException e) {
                 System.out.println("Erro: " + e.getMessage());
+            }
+
+            if (opcao != 0) {
+                leitor.pausar();
             }
         } while (opcao != 0);
     }
