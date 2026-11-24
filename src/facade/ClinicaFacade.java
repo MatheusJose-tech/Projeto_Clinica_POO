@@ -311,6 +311,16 @@ public class ClinicaFacade {
         consulta.cancelar();
         consultaRepo.salvar(consulta);
     }
+    
+    public void realizarConsulta(int id) throws ClinicaException {
+        Consulta consulta = consultaRepo.buscarPorId(id);
+        if (consulta == null) {
+            throw new DadosInvalidosException("Consulta não encontrada.");
+        }
+
+        consulta.realizar();
+        consultaRepo.salvar(consulta);
+    }
 
     public void remarcarConsulta(int id, LocalDateTime novaDataHora) throws ClinicaException {
         Consulta consulta = consultaRepo.buscarPorId(id);
