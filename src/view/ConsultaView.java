@@ -14,6 +14,7 @@ import java.util.Scanner;
 import model.Consulta;
 import model.Profissional;
 import model.Relatorio;
+import model.StatusConsulta;
 import model.exception.ClinicaException;
 
 public class ConsultaView {
@@ -33,7 +34,7 @@ public class ConsultaView {
 
     public void exibirMenu() {
         int opcao;
-        
+
         do {
             leitor.limparTela();
             System.out.println();
@@ -70,20 +71,20 @@ public class ConsultaView {
 
     public void exibirRelatorio() {
         try {
-            
+
             System.out.println("--- Relatório por profissional ---");
             String cpfProfissional = selecionarProfissional();
-            
+
             if (cpfProfissional == null) {
                 return;
             }
-            
+
             LocalDate inicio = lerData("Data inicial (dd/MM/aaaa): ");
-            
+
             if (inicio == null) {
                 return;
             }
-            
+
             LocalDate fim = lerData("Data final (dd/MM/aaaa): ");
             if (fim == null) {
                 return;
@@ -91,14 +92,14 @@ public class ConsultaView {
 
             Relatorio relatorio = controller.gerarRelatorio(cpfProfissional, inicio, fim);
             System.out.println(relatorio);
-        
+
         } catch (ClinicaException e) {
             System.out.println("Erro: " + e.getMessage());
         }
     }
 
     private void agendar() throws ClinicaException {
-        
+
         System.out.println("--- Agendar consulta ---");
         String cpfPaciente = leitor.lerTexto("CPF do paciente: ");
 
@@ -127,46 +128,46 @@ public class ConsultaView {
         String tipo = disponiveis.get(idxTipo);
 
         String cpfProfissional = selecionarProfissional();
-        
+
         if (cpfProfissional == null) {
             return;
         }
 
         List<LocalDate> dias = controller.listarDiasDisponiveis(tipo, cpfPaciente, cpfProfissional);
-        
+
         if (dias.isEmpty()) {
             System.out.println("Não há dias disponíveis para este profissional.");
             return;
         }
 
         System.out.println("Dias disponíveis:");
-        
+
         for (int i = 0; i < dias.size(); i++) {
             System.out.println((i + 1) + " - " + dias.get(i).format(DATA_FMT));
         }
 
         int idxDia = escolherIndice(dias.size(), "Escolha o dia: ");
-        
+
         if (idxDia == -1) {
             return;
         }
         LocalDate diaEscolhido = dias.get(idxDia);
 
         List<LocalTime> horarios = controller.listarHorariosLivres(tipo, cpfProfissional, diaEscolhido);
-        
+
         if (horarios.isEmpty()) {
             System.out.println("Não há horários livres neste dia.");
             return;
         }
 
         System.out.println("Horários livres:");
-        
+
         for (int i = 0; i < horarios.size(); i++) {
             System.out.println((i + 1) + " - " + horarios.get(i).format(HORA_FMT));
         }
 
         int idxHora = escolherIndice(horarios.size(), "Escolha o horário: ");
-        
+
         if (idxHora == -1) {
             return;
         }
@@ -178,26 +179,44 @@ public class ConsultaView {
                 + " | Valor: R$ " + String.format("%.2f", consulta.calcularValor()));
     }
 
-    private void listar() {
-        List<Consulta> consultas = controller.listar();
+    private boolean exibirConsultasDisponiveis(boolean apenasAgendadas) {
+        List<Consulta> todas = controller.listar();
+        List<Consulta> filtradas = new ArrayList<>();
 
-        if (consultas.isEmpty()) {
-            System.out.println("Nenhuma consulta cadastrada.");
-            return;
+        for (Consulta c : todas) {
+            if (!apenasAgendadas || c.getStatus() == StatusConsulta.AGENDADA) {
+                filtradas.add(c);
+            }
         }
 
-        System.out.println("--- Consultas cadastradas (" + consultas.size() + ") ---");
-        
-        for (Consulta c : consultas) {
+        if (filtradas.isEmpty()) {
+            System.out.println(apenasAgendadas
+                    ? "Erro: Nenhuma consulta agendada disponível para esta operação."
+                    : "Nenhuma consulta cadastrada.");
+            return false;
+        }
+
+        System.out.println("--- Consultas (" + filtradas.size() + ") ---");
+        System.out.println("ID | TIPO | PACIENTE | PROFISSIONAL | DATA/HORA | STATUS | VALOR");
+        for (Consulta c : filtradas) {
             System.out.println(c);
         }
+        System.out.println();
+        return true;
+    }
+
+    private void listar() {
+        exibirConsultasDisponiveis(false);
     }
 
     private void realizar() throws ClinicaException {
-        
+        if (!exibirConsultasDisponiveis(true)) {
+            return;
+        }
+
         System.out.println("--- Realizar consulta ---");
-        int id = leitor.lerOpcao("ID da consulta: ");
-        
+
+        int id = leitor.lerOpcao("ID da consulta: #");
         if (id <= 0) {
             System.out.println("ID inválido.");
             return;
@@ -208,10 +227,13 @@ public class ConsultaView {
     }
 
     private void cancelar() throws ClinicaException {
-        
+        if (!exibirConsultasDisponiveis(true)) {
+            return;
+        }
+
         System.out.println("--- Cancelar consulta ---");
-        int id = leitor.lerOpcao("ID da consulta: ");
-        
+
+        int id = leitor.lerOpcao("ID da consulta: #");
         if (id <= 0) {
             System.out.println("ID inválido.");
             return;
@@ -228,50 +250,47 @@ public class ConsultaView {
     }
 
     private void remarcar() throws ClinicaException {
-        
+        if (!exibirConsultasDisponiveis(true)) {
+            return;
+        }
+
         System.out.println("--- Remarcar consulta ---");
-        int id = leitor.lerOpcao("ID da consulta: ");
-        
+
+        int id = leitor.lerOpcao("ID da consulta: #");
         if (id <= 0) {
             System.out.println("ID inválido.");
             return;
         }
 
         List<LocalDate> dias = controller.listarDiasDisponiveisRemarcacao(id);
-        
         if (dias.isEmpty()) {
             System.out.println("Não há dias disponíveis para remarcação.");
             return;
         }
 
         System.out.println("Dias disponíveis:");
-        
         for (int i = 0; i < dias.size(); i++) {
             System.out.println((i + 1) + " - " + dias.get(i).format(DATA_FMT));
         }
 
         int idxDia = escolherIndice(dias.size(), "Escolha o novo dia: ");
-        
         if (idxDia == -1) {
             return;
         }
         LocalDate diaEscolhido = dias.get(idxDia);
 
         List<LocalTime> horarios = controller.listarHorariosLivresRemarcacao(id, diaEscolhido);
-        
         if (horarios.isEmpty()) {
             System.out.println("Não há horários livres neste dia.");
             return;
         }
 
         System.out.println("Horários livres:");
-        
         for (int i = 0; i < horarios.size(); i++) {
             System.out.println((i + 1) + " - " + horarios.get(i).format(HORA_FMT));
         }
 
         int idxHora = escolherIndice(horarios.size(), "Escolha o novo horário: ");
-        
         if (idxHora == -1) {
             return;
         }
@@ -282,16 +301,16 @@ public class ConsultaView {
     }
 
     private String selecionarProfissional() throws ClinicaException {
-        
+
         List<Profissional> profissionais = profissionalController.listar();
-        
+
         if (profissionais.isEmpty()) {
             System.out.println("Nenhum profissional cadastrado.");
             return null;
         }
 
         System.out.println("Profissionais disponíveis:");
-        
+
         for (int i = 0; i < profissionais.size(); i++) {
             Profissional p = profissionais.get(i);
             System.out.println((i + 1) + " - " + p.getNome()
@@ -300,7 +319,7 @@ public class ConsultaView {
         }
 
         int idx = escolherIndice(profissionais.size(), "Escolha o profissional: ");
-        
+
         if (idx == -1) {
             return null;
         }
@@ -308,9 +327,9 @@ public class ConsultaView {
     }
 
     private int escolherIndice(int tamanho, String mensagem) {
-        
+
         int escolha = leitor.lerOpcao(mensagem);
-        
+
         if (escolha < 1 || escolha > tamanho) {
             System.out.println("Opção inválida.");
             return -1;
@@ -319,9 +338,9 @@ public class ConsultaView {
     }
 
     private LocalDate lerData(String mensagem) {
-        
+
         String texto = leitor.lerTexto(mensagem);
-        
+
         try {
             return LocalDate.parse(texto, DATA_FMT);
         } catch (DateTimeParseException e) {
