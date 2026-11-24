@@ -38,7 +38,11 @@ public class MenuPrincipal {
                     consultaView.exibirRelatorio();
                     leitor.pausar();
                 }
-                case 0 -> System.out.println("Encerrando o sistema...");
+                case 0 -> {
+                    System.out.println("Encerrando o sistema...");
+                    leitor.pausar();
+                    leitor.limparTela();
+                }
                 default -> {
                     System.out.println("Opção inválida. Digite um número de 0 a 4.");
                     leitor.pausar();
