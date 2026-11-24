@@ -35,6 +35,7 @@ public class ConsultaView {
         int opcao;
         
         do {
+            leitor.limparTela();
             System.out.println();
             System.out.println("===== CONSULTAS =====");
             System.out.println("1 - Agendar");
@@ -59,6 +60,10 @@ public class ConsultaView {
                 }
             } catch (ClinicaException e) {
                 System.out.println("Erro: " + e.getMessage());
+            }
+
+            if (opcao != 0) {
+                leitor.pausar();
             }
         } while (opcao != 0);
     }
