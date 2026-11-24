@@ -18,6 +18,7 @@ public class LoginView {
     }
 
     public boolean autenticar() {
+        leitor.limparTela();
         System.out.println("===== LOGIN =====");
 
         for (int tentativa = 1; tentativa <= MAX_TENTATIVAS; tentativa++) {
@@ -27,6 +28,7 @@ public class LoginView {
             try {
                 controller.login(login, senha);
                 System.out.println("Login realizado com sucesso!");
+                leitor.pausar();
                 return true;
             } catch (CredenciaisInvalidasException e) {
                 int restantes = MAX_TENTATIVAS - tentativa;
