@@ -40,6 +40,8 @@ public class LoginView {
         }
 
         System.out.println("Número máximo de tentativas excedido. Encerrando o sistema...");
+        leitor.pausar();
+        leitor.limparTela();
         return false;
     }
 }
