@@ -64,20 +64,22 @@ public class ClinicaFacade {
     }
 
     public Usuario autenticar(String login, String senha) throws CredenciaisInvalidasException {
+        
         Usuario usuario = usuarioRepo.buscarPorLogin(login);
 
         if (usuario == null) {
-            throw new CredenciaisInvalidasException("Usuário não encontrado");
+            throw new CredenciaisInvalidasException("Usuário não encontrado.");
         }
 
         if (!usuario.autenticar(senha)) {
-            throw new CredenciaisInvalidasException("Senha inválida");
+            throw new CredenciaisInvalidasException("Senha inválida.");
         }
 
         return usuario;
     }
 
     public void cadastrarPaciente(String nome, String cpf, String plano) throws DadosInvalidosException {
+        
         if (pacienteRepo.buscarPorCpf(cpf) != null) {
             throw new DadosInvalidosException("Já existe um paciente cadastrado com este CPF.");
         }
