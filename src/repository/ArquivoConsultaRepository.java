@@ -3,6 +3,7 @@ package repository;
 import java.io.*;
 import java.nio.file.*;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 import model.Consulta;
@@ -20,19 +21,9 @@ public class ArquivoConsultaRepository implements ConsultaRepository {
 
     @Override
     public void salvar(Consulta c) {
-        boolean atualizou = false;
-        for (int i = 0; i < consultas.size(); i++) {
-            if (consultas.get(i).getId() == c.getId()) {
-                consultas.set(i, c);
-                atualizou = true;
-                break;
-            }
-        }
-
-        if (!atualizou) {
-            consultas.add(c);
-        }
-
+        consultas.removeIf(existente -> existente.getId() == c.getId());
+        consultas.add(c);
+        consultas.sort(Comparator.comparing(Consulta::getDataHora));
         gravar();
     }
 
