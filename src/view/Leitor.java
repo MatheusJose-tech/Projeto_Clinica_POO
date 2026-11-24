@@ -34,4 +34,23 @@ public class Leitor {
             return -1;
         }
     }
+        public void pausar() {
+        
+            System.out.print("\nPressione ENTER para continuar...");
+        
+        if (scanner.hasNextLine()) {
+            scanner.nextLine();
+        }
+    }
+
+    public void limparTela() {
+    
+    if (System.console() == null) {
+        System.out.print("\n".repeat(40));
+        return;
+    }
+
+    System.out.print("\033[H\033[2J");
+    System.out.flush();
+    }
 }
