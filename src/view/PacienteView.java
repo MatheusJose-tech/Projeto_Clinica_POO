@@ -10,11 +10,11 @@ import model.exception.ClinicaException;
 public class PacienteView {
 
     private final PacienteController controller;
-    private final Scanner scanner;
+    private final Leitor leitor;
 
     public PacienteView(PacienteController controller, Scanner scanner) {
         this.controller = controller;
-        this.scanner = scanner;
+        this.leitor = new Leitor(scanner);
     }
 
     public void exibirMenu() {
@@ -27,7 +27,7 @@ public class PacienteView {
             System.out.println("3 - Alterar");
             System.out.println("4 - Remover");
             System.out.println("0 - Voltar");
-            opcao = lerOpcao();
+            opcao = leitor.lerOpcao("Escolha uma opção: ");
 
             try {
                 switch (opcao) {
@@ -48,15 +48,16 @@ public class PacienteView {
 
     private void cadastrar() throws ClinicaException {
         System.out.println("--- Cadastrar paciente ---");
-        String nome = lerTexto("Nome: ");
-        String cpf = lerTexto("CPF (11 dígitos, só números): ");
-        String plano = lerTexto("Plano de saúde (deixe vazio se não tiver): ");
+        String nome = leitor.lerTexto("Nome: ");
+        String cpf = leitor.lerTexto("CPF (11 dígitos, só números): ");
+        String plano = leitor.lerTexto("Plano de saúde (deixe vazio se não tiver): ");
 
         controller.cadastrar(nome, cpf, plano);
         System.out.println("Paciente cadastrado com sucesso.");
     }
 
-    private void listar() {
+    // Declara throws para funcionar mesmo se o listar() do controller declarar ClinicaException.
+    private void listar() throws ClinicaException {
         List<Paciente> pacientes = controller.listar();
 
         if (pacientes.isEmpty()) {
@@ -66,15 +67,15 @@ public class PacienteView {
 
         System.out.println("--- Pacientes cadastrados (" + pacientes.size() + ") ---");
         for (Paciente p : pacientes) {
-            System.out.println(p);
+            System.out.println(formatar(p));
         }
     }
 
     private void alterar() throws ClinicaException {
         System.out.println("--- Alterar paciente ---");
-        String cpf = lerTexto("CPF do paciente: ");
-        String nome = lerTexto("Novo nome: ");
-        String plano = lerTexto("Novo plano de saúde (deixe vazio se não tiver): ");
+        String cpf = leitor.lerTexto("CPF do paciente: ");
+        String nome = leitor.lerTexto("Novo nome: ");
+        String plano = leitor.lerTexto("Novo plano de saúde (deixe vazio se não tiver): ");
 
         controller.alterar(cpf, nome, plano);
         System.out.println("Paciente alterado com sucesso.");
@@ -82,8 +83,8 @@ public class PacienteView {
 
     private void remover() throws ClinicaException {
         System.out.println("--- Remover paciente ---");
-        String cpf = lerTexto("CPF do paciente: ");
-        String confirmacao = lerTexto("Confirma a remoção? (s/n): ");
+        String cpf = leitor.lerTexto("CPF do paciente: ");
+        String confirmacao = leitor.lerTexto("Confirma a remoção? (s/n): ");
 
         if (!"s".equalsIgnoreCase(confirmacao)) {
             System.out.println("Remoção cancelada.");
@@ -94,27 +95,10 @@ public class PacienteView {
         System.out.println("Paciente removido com sucesso.");
     }
 
-    // ---------- Leitura protegida ----------
+    // ---------- Apresentação ----------
 
-    // Opção não numérica vira -1 (inválida); fim da entrada vira 0 (voltar).
-    private int lerOpcao() {
-        String linha = lerTexto("Escolha uma opção: ");
-        if (linha == null) {
-            return 0;
-        }
-        try {
-            return Integer.parseInt(linha);
-        } catch (NumberFormatException e) {
-            return -1;
-        }
-    }
-
-    // Devolve o texto digitado sem espaços nas pontas, ou null se a entrada acabou.
-    private String lerTexto(String mensagem) {
-        System.out.print(mensagem);
-        if (!scanner.hasNextLine()) {
-            return null;
-        }
-        return scanner.nextLine().trim();
+    private String formatar(Paciente p) {
+        String plano = p.temPlano() ? p.getPlano() : "sem plano";
+        return p.getNome() + " | CPF: " + p.getCpf() + " | Plano: " + plano;
     }
 }
