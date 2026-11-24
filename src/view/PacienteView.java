@@ -1,9 +1,8 @@
 package view;
 
+import controller.PacienteController;
 import java.util.List;
 import java.util.Scanner;
-
-import controller.PacienteController;
 import model.Paciente;
 import model.exception.ClinicaException;
 
@@ -20,6 +19,7 @@ public class PacienteView {
     public void exibirMenu() {
         int opcao;
         do {
+            leitor.limparTela();
             System.out.println();
             System.out.println("===== PACIENTES =====");
             System.out.println("1 - Cadastrar");
@@ -40,6 +40,10 @@ public class PacienteView {
                 }
             } catch (ClinicaException e) {
                 System.out.println("Erro: " + e.getMessage());
+            }
+
+            if (opcao != 0) {
+                leitor.pausar();
             }
         } while (opcao != 0);
     }
