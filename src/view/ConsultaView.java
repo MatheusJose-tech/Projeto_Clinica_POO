@@ -1,6 +1,7 @@
 package view;
 
 import controller.ConsultaController;
+import controller.ProfissionalController;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -11,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 import model.Consulta;
+import model.Profissional;
 import model.Relatorio;
 import model.exception.ClinicaException;
 
@@ -20,10 +22,12 @@ public class ConsultaView {
     private static final DateTimeFormatter HORA_FMT = DateTimeFormatter.ofPattern("HH:mm");
 
     private final ConsultaController controller;
+    private final ProfissionalController profissionalController;
     private final Leitor leitor;
 
-    public ConsultaView(ConsultaController controller, Scanner scanner) {
+    public ConsultaView(ConsultaController controller, ProfissionalController profissionalController, Scanner scanner) {
         this.controller = controller;
+        this.profissionalController = profissionalController;
         this.leitor = new Leitor(scanner);
     }
 
@@ -63,7 +67,12 @@ public class ConsultaView {
         try {
             
             System.out.println("--- Relatório por profissional ---");
-            String cpfProfissional = leitor.lerTexto("CPF do profissional: ");
+            String cpfProfissional = selecionarProfissional();
+            
+            if (cpfProfissional == null) {
+                return;
+            }
+            
             LocalDate inicio = lerData("Data inicial (dd/MM/aaaa): ");
             
             if (inicio == null) {
@@ -112,7 +121,11 @@ public class ConsultaView {
         }
         String tipo = disponiveis.get(idxTipo);
 
-        String cpfProfissional = leitor.lerTexto("CPF do profissional: ");
+        String cpfProfissional = selecionarProfissional();
+        
+        if (cpfProfissional == null) {
+            return;
+        }
 
         List<LocalDate> dias = controller.listarDiasDisponiveis(tipo, cpfPaciente, cpfProfissional);
         
@@ -261,6 +274,32 @@ public class ConsultaView {
 
         controller.remarcar(id, LocalDateTime.of(diaEscolhido, horaEscolhida));
         System.out.println("Consulta remarcada com sucesso.");
+    }
+
+    private String selecionarProfissional() throws ClinicaException {
+        
+        List<Profissional> profissionais = profissionalController.listar();
+        
+        if (profissionais.isEmpty()) {
+            System.out.println("Nenhum profissional cadastrado.");
+            return null;
+        }
+
+        System.out.println("Profissionais disponíveis:");
+        
+        for (int i = 0; i < profissionais.size(); i++) {
+            Profissional p = profissionais.get(i);
+            System.out.println((i + 1) + " - " + p.getNome()
+                    + " | Especialidade: " + p.getEspecialidade()
+                    + " | CPF: " + p.getCpf());
+        }
+
+        int idx = escolherIndice(profissionais.size(), "Escolha o profissional: ");
+        
+        if (idx == -1) {
+            return null;
+        }
+        return profissionais.get(idx).getCpf();
     }
 
     private int escolherIndice(int tamanho, String mensagem) {

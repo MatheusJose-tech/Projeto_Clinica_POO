@@ -44,7 +44,7 @@ public class Main {
             LoginView loginView = new LoginView(authController, scanner);
             PacienteView pacienteView = new PacienteView(pacienteController, scanner);
             ProfissionalView profissionalView = new ProfissionalView(profissionalController, scanner);
-            ConsultaView consultaView = new ConsultaView(consultaController, scanner);
+            ConsultaView consultaView = new ConsultaView(consultaController, profissionalController, scanner);
             MenuPrincipal menuPrincipal = new MenuPrincipal(pacienteView, profissionalView, consultaView, scanner);
 
             if (loginView.autenticar()) {
