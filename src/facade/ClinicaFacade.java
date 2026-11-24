@@ -383,7 +383,7 @@ public class ClinicaFacade {
         int qtdRetorno = 0;
 
         for (Consulta c : consultaRepo.listar()) {
-            if (c.getStatus() == StatusConsulta.CANCELADA) {
+            if (c.getStatus() == StatusConsulta.CANCELADA || c.getStatus() == StatusConsulta.AGENDADA) {
                 continue;
             }
 
@@ -488,6 +488,7 @@ public class ClinicaFacade {
         }
         return false;
     }
+
     private List<Consulta> listarHistoricoSemConsulta(int idConsultaIgnorada) {
         List<Consulta> filtradas = new ArrayList<>();
         for (Consulta c : consultaRepo.listar()) {
