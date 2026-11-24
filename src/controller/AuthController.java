@@ -1,4 +1,5 @@
 package controller;
+
 import facade.ClinicaFacade;
 import model.exception.CredenciaisInvalidasException;
 
@@ -9,8 +10,7 @@ public class AuthController {
         this.facade = facade;
     }
 
-    public void autenticar(String usuario, String senha) throws CredenciaisInvalidasException {
-        facade.autenticar(usuario, senha);
-  
+    public void login(String login, String senha) throws CredenciaisInvalidasException {
+        facade.autenticar(login, senha);
     }
 }
