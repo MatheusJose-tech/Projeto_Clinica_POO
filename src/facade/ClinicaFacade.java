@@ -118,6 +118,14 @@ public class ClinicaFacade {
             throw new DadosInvalidosException("Paciente não encontrado.");
         }
 
+        for (Consulta c : consultaRepo.listar()) {
+            if (c.getStatus() == StatusConsulta.AGENDADA
+                    && c.getPaciente().getCpf().equals(paciente.getCpf())) {
+                throw new DadosInvalidosException(
+                        "Não é possível remover o paciente: existem consultas agendadas vinculadas a ele.");
+            }
+        }
+
         pacienteRepo.remover(cpf);
     }
 
@@ -160,6 +168,14 @@ public class ClinicaFacade {
         Profissional profissional = profissionalRepo.buscarPorCpf(cpf);
         if (profissional == null) {
             throw new DadosInvalidosException("Profissional não encontrado.");
+        }
+
+        for (Consulta c : consultaRepo.listar()) {
+            if (c.getStatus() == StatusConsulta.AGENDADA
+                    && c.getProfissional().getCpf().equals(profissional.getCpf())) {
+                throw new DadosInvalidosException(
+                        "Não é possível remover o profissional: existem consultas agendadas vinculadas a ele.");
+            }
         }
 
         profissionalRepo.remover(cpf);
@@ -311,7 +327,7 @@ public class ClinicaFacade {
         consulta.cancelar();
         consultaRepo.salvar(consulta);
     }
-    
+
     public void realizarConsulta(int id) throws ClinicaException {
         Consulta consulta = consultaRepo.buscarPorId(id);
         if (consulta == null) {
