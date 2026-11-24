@@ -10,11 +10,11 @@ import model.exception.ClinicaException;
 public class ProfissionalView {
 
     private final ProfissionalController controller;
-    private final Scanner scanner;
+    private final Leitor leitor;
 
     public ProfissionalView(ProfissionalController controller, Scanner scanner) {
         this.controller = controller;
-        this.scanner = scanner;
+        this.leitor = new Leitor(scanner);
     }
 
     public void exibirMenu() {
@@ -27,7 +27,7 @@ public class ProfissionalView {
             System.out.println("3 - Alterar");
             System.out.println("4 - Remover");
             System.out.println("0 - Voltar");
-            opcao = lerOpcao();
+            opcao = leitor.lerOpcao("Escolha uma opção: ");
 
             try {
                 switch (opcao) {
@@ -48,15 +48,16 @@ public class ProfissionalView {
 
     private void cadastrar() throws ClinicaException {
         System.out.println("--- Cadastrar profissional ---");
-        String nome = lerTexto("Nome: ");
-        String cpf = lerTexto("CPF (11 dígitos, só números): ");
-        String especialidade = lerTexto("Especialidade: ");
+        String nome = leitor.lerTexto("Nome: ");
+        String cpf = leitor.lerTexto("CPF (11 dígitos, só números): ");
+        String especialidade = leitor.lerTexto("Especialidade: ");
 
         controller.cadastrar(nome, cpf, especialidade);
         System.out.println("Profissional cadastrado com sucesso.");
     }
 
-    private void listar() {
+    // Declara throws para funcionar mesmo se o listar() do controller declarar ClinicaException.
+    private void listar() throws ClinicaException {
         List<Profissional> profissionais = controller.listar();
 
         if (profissionais.isEmpty()) {
@@ -66,15 +67,15 @@ public class ProfissionalView {
 
         System.out.println("--- Profissionais cadastrados (" + profissionais.size() + ") ---");
         for (Profissional p : profissionais) {
-            System.out.println(p);
+            System.out.println(formatar(p));
         }
     }
 
     private void alterar() throws ClinicaException {
         System.out.println("--- Alterar profissional ---");
-        String cpf = lerTexto("CPF do profissional: ");
-        String nome = lerTexto("Novo nome: ");
-        String especialidade = lerTexto("Nova especialidade: ");
+        String cpf = leitor.lerTexto("CPF do profissional: ");
+        String nome = leitor.lerTexto("Novo nome: ");
+        String especialidade = leitor.lerTexto("Nova especialidade: ");
 
         controller.alterar(cpf, nome, especialidade);
         System.out.println("Profissional alterado com sucesso.");
@@ -82,8 +83,8 @@ public class ProfissionalView {
 
     private void remover() throws ClinicaException {
         System.out.println("--- Remover profissional ---");
-        String cpf = lerTexto("CPF do profissional: ");
-        String confirmacao = lerTexto("Confirma a remoção? (s/n): ");
+        String cpf = leitor.lerTexto("CPF do profissional: ");
+        String confirmacao = leitor.lerTexto("Confirma a remoção? (s/n): ");
 
         if (!"s".equalsIgnoreCase(confirmacao)) {
             System.out.println("Remoção cancelada.");
@@ -94,27 +95,9 @@ public class ProfissionalView {
         System.out.println("Profissional removido com sucesso.");
     }
 
-    // ---------- Leitura protegida ----------
+    // ---------- Apresentação ----------
 
-    // Opção não numérica vira -1 (inválida); fim da entrada vira 0 (voltar).
-    private int lerOpcao() {
-        String linha = lerTexto("Escolha uma opção: ");
-        if (linha == null) {
-            return 0;
-        }
-        try {
-            return Integer.parseInt(linha);
-        } catch (NumberFormatException e) {
-            return -1;
-        }
-    }
-
-    // Devolve o texto digitado sem espaços nas pontas, ou null se a entrada acabou.
-    private String lerTexto(String mensagem) {
-        System.out.print(mensagem);
-        if (!scanner.hasNextLine()) {
-            return null;
-        }
-        return scanner.nextLine().trim();
+    private String formatar(Profissional p) {
+        return p.getNome() + " | CPF: " + p.getCpf() + " | Especialidade: " + p.getEspecialidade();
     }
 }
