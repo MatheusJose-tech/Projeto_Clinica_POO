@@ -20,6 +20,7 @@ public class MenuPrincipal {
     public void exibirMenu() {
         int opcao;
         do {
+            leitor.limparTela();
             System.out.println();
             System.out.println("===== SISTEMA DA CLÍNICA =====");
             System.out.println("1 - Pacientes");
@@ -33,9 +34,19 @@ public class MenuPrincipal {
                 case 1 -> pacienteView.exibirMenu();
                 case 2 -> profissionalView.exibirMenu();
                 case 3 -> consultaView.exibirMenu();
-                case 4 -> consultaView.exibirRelatorio();
-                case 0 -> System.out.println("Encerrando o sistema...");
-                default -> System.out.println("Opção inválida. Digite um número de 0 a 4.");
+                case 4 -> {
+                    consultaView.exibirRelatorio();
+                    leitor.pausar();
+                }
+                case 0 -> {
+                    System.out.println("Encerrando o sistema...");
+                    leitor.pausar();
+                    leitor.limparTela();
+                }
+                default -> {
+                    System.out.println("Opção inválida. Digite um número de 0 a 4.");
+                    leitor.pausar();
+                }
             }
         } while (opcao != 0);
     }

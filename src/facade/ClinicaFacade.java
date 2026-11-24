@@ -67,11 +67,11 @@ public class ClinicaFacade {
         Usuario usuario = usuarioRepo.buscarPorLogin(login);
 
         if (usuario == null) {
-            throw new CredenciaisInvalidasException("Usuário não encontrado");
+            throw new CredenciaisInvalidasException("Usuário não encontrado.");
         }
 
         if (!usuario.autenticar(senha)) {
-            throw new CredenciaisInvalidasException("Senha inválida");
+            throw new CredenciaisInvalidasException("Senha inválida.");
         }
 
         return usuario;
@@ -266,7 +266,7 @@ public class ClinicaFacade {
         }
 
         ConsultaCreator creator = obterCreator(consulta.getTipo());
-        List<Consulta> historico = consultaRepo.listar();
+        List<Consulta> historico = listarHistoricoSemConsulta(idConsulta);
         LocalDate hoje = LocalDate.now();
         List<LocalDate> dias = new ArrayList<>();
 
@@ -351,7 +351,7 @@ public class ClinicaFacade {
         validarDentroDaAgenda(novaDataHora, consulta.getDuracao());
 
         ConsultaCreator creator = obterCreator(consulta.getTipo());
-        List<Consulta> historico = consultaRepo.listar();
+        List<Consulta> historico = listarHistoricoSemConsulta(id);
         creator.validarElegibilidade(consulta.getPaciente(), novaDataHora.toLocalDate(), historico);
 
         LocalDateTime fimNova = novaDataHora.plusMinutes(consulta.getDuracao());
@@ -487,5 +487,14 @@ public class ClinicaFacade {
             }
         }
         return false;
+    }
+    private List<Consulta> listarHistoricoSemConsulta(int idConsultaIgnorada) {
+        List<Consulta> filtradas = new ArrayList<>();
+        for (Consulta c : consultaRepo.listar()) {
+            if (c.getId() != idConsultaIgnorada) {
+                filtradas.add(c);
+            }
+        }
+        return filtradas;
     }
 }

@@ -39,6 +39,10 @@ public class RetornoCreator extends ConsultaCreator {
             throw new RetornoForaDoPrazoException("O paciente " + paciente.getNome() + " não tem nenhuma consulta realizada para ter retorno.");
         }
 
+        if (possuiRetornoParaConsulta(paciente, ultima, historico)) {
+            throw new DadosInvalidosException("O paciente " + paciente.getNome() + " já possui um retorno agendado ou realizado para a última consulta.");
+        }
+
         LocalDate dataUltima = ultima.getDataHora().toLocalDate();
         long dias = ChronoUnit.DAYS.between(dataUltima, data);
 
@@ -71,11 +75,28 @@ public class RetornoCreator extends ConsultaCreator {
             
             boolean mesmoPaciente = c.getPaciente().getCpf().equals(paciente.getCpf());
             
-            if (mesmoPaciente && c.getStatus() == StatusConsulta.REALIZADA
+            if (mesmoPaciente && !(c instanceof ConsultaRetorno) && c.getStatus() == StatusConsulta.REALIZADA
                     && (ultima == null || c.getDataHora().isAfter(ultima.getDataHora()))) {
                 ultima = c;
             }
         }
         return ultima;
+    }
+
+    private boolean possuiRetornoParaConsulta(Paciente paciente, Consulta ultimaRealizada, List<Consulta> historico) {
+        if (historico == null) {
+            return false;
+        }
+
+        for (Consulta c : historico) {
+            boolean mesmoPaciente = c.getPaciente().getCpf().equals(paciente.getCpf());
+            boolean ehRetornoAtivo = (c instanceof ConsultaRetorno) && c.getStatus() != StatusConsulta.CANCELADA;
+
+            if (mesmoPaciente && ehRetornoAtivo
+                    && !c.getDataHora().isBefore(ultimaRealizada.getDataHora())) {
+                return true;
+            }
+        }
+        return false;
     }
 }
