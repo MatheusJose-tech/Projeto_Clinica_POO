@@ -78,11 +78,24 @@ public class ClinicaFacade {
     }
 
     public void cadastrarPaciente(String nome, String cpf, String plano) throws DadosInvalidosException {
-        if (pacienteRepo.buscarPorCpf(cpf) != null) {
+        String cpfLimpo = cpf != null ? cpf.trim() : null;
+
+        if (pacienteRepo.buscarPorCpf(cpfLimpo) != null) {
             throw new DadosInvalidosException("Já existe um paciente cadastrado com este CPF.");
         }
 
-        Paciente novoPaciente = new Paciente(nome, cpf, plano);
+        String nomeParaCadastro = nome;
+        Profissional profissionalExistente = profissionalRepo.buscarPorCpf(cpfLimpo);
+        if (profissionalExistente != null) {
+            if (!profissionalExistente.getNome().equalsIgnoreCase(normalizarNome(nome))) {
+                throw new DadosInvalidosException(
+                        "Este CPF já está cadastrado como profissional com o nome \""
+                        + profissionalExistente.getNome() + "\". Para cadastrar como paciente, o nome deve ser idêntico.");
+            }
+            nomeParaCadastro = profissionalExistente.getNome();
+        }
+
+        Paciente novoPaciente = new Paciente(nomeParaCadastro, cpfLimpo, plano);
         pacienteRepo.salvar(novoPaciente);
     }
 
@@ -110,6 +123,12 @@ public class ClinicaFacade {
         paciente.setNome(nome);
         paciente.setPlano(plano);
         pacienteRepo.salvar(paciente);
+
+        Profissional profissionalVinculado = profissionalRepo.buscarPorCpf(paciente.getCpf());
+        if (profissionalVinculado != null && !profissionalVinculado.getNome().equals(paciente.getNome())) {
+            profissionalVinculado.setNome(paciente.getNome());
+            profissionalRepo.salvar(profissionalVinculado);
+        }
     }
 
     public void removerPaciente(String cpf) throws DadosInvalidosException {
@@ -130,11 +149,24 @@ public class ClinicaFacade {
     }
 
     public void cadastrarProfissional(String nome, String cpf, String especialidade) throws DadosInvalidosException {
-        if (profissionalRepo.buscarPorCpf(cpf) != null) {
+        String cpfLimpo = cpf != null ? cpf.trim() : null;
+
+        if (profissionalRepo.buscarPorCpf(cpfLimpo) != null) {
             throw new DadosInvalidosException("Já existe um profissional cadastrado com este CPF.");
         }
 
-        Profissional novoProfissional = new Profissional(nome, cpf, especialidade);
+        String nomeParaCadastro = nome;
+        Paciente pacienteExistente = pacienteRepo.buscarPorCpf(cpfLimpo);
+        if (pacienteExistente != null) {
+            if (!pacienteExistente.getNome().equalsIgnoreCase(normalizarNome(nome))) {
+                throw new DadosInvalidosException(
+                        "Este CPF já está cadastrado como paciente com o nome \""
+                        + pacienteExistente.getNome() + "\". Para cadastrar como profissional, o nome deve ser idêntico.");
+            }
+            nomeParaCadastro = pacienteExistente.getNome();
+        }
+
+        Profissional novoProfissional = new Profissional(nomeParaCadastro, cpfLimpo, especialidade);
         profissionalRepo.salvar(novoProfissional);
     }
 
@@ -162,6 +194,12 @@ public class ClinicaFacade {
         profissional.setNome(nome);
         profissional.setEspecialidade(especialidade);
         profissionalRepo.salvar(profissional);
+
+        Paciente pacienteVinculado = pacienteRepo.buscarPorCpf(profissional.getCpf());
+        if (pacienteVinculado != null && !pacienteVinculado.getNome().equals(profissional.getNome())) {
+            pacienteVinculado.setNome(profissional.getNome());
+            pacienteRepo.salvar(pacienteVinculado);
+        }
     }
 
     public void removerProfissional(String cpf) throws DadosInvalidosException {
@@ -179,6 +217,10 @@ public class ClinicaFacade {
         }
 
         profissionalRepo.remover(cpf);
+    }
+
+    private String normalizarNome(String nome) {
+        return nome == null ? "" : nome.trim().replaceAll("\\s+", " ");
     }
 
     public Map<String, String> listarTiposDisponiveis(String cpfPaciente) throws DadosInvalidosException {
@@ -280,7 +322,8 @@ public class ClinicaFacade {
             } catch (ClinicaException e) {
                 continue;
             }
-            if (!calcularHorariosLivres(consulta.getProfissional(), consulta.getDuracao(), dia, consulta.getId()).isEmpty()) {
+            if (!calcularHorariosLivres(consulta.getProfissional(), consulta.getDuracao(), dia, consulta.getId())
+                    .isEmpty()) {
                 dias.add(dia);
             }
         }
