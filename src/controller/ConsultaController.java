@@ -57,6 +57,11 @@ public class ConsultaController {
     public void cancelar(int id) throws ClinicaException {
         facade.cancelarConsulta(id);
     }
+    
+    public void realizar(int id) throws ClinicaException {
+        facade.realizarConsulta(id);
+    }
+
 
     public List<Consulta> listar() {
         return facade.listarConsultas();
