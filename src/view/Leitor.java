@@ -1,5 +1,6 @@
 package view;
 
+import java.io.IOException;
 import java.util.Scanner;
 
 public class Leitor {
@@ -44,13 +45,18 @@ public class Leitor {
     }
 
     public void limparTela() {
-    
-    if (System.console() == null) {
-        System.out.print("\n".repeat(40));
-        return;
-    }
 
-    System.out.print("\033[H\033[2J");
-    System.out.flush();
+        try {
+            String os = System.getProperty("os.name").toLowerCase();
+            if (os.contains("win")) {
+                new ProcessBuilder("cmd", "/c", "cls").inheritIO().start().waitFor();
+            } else {
+                new ProcessBuilder("clear").inheritIO().start().waitFor();
+            }
+        } catch (IOException | InterruptedException e) {
+            if (e instanceof InterruptedException) {
+                Thread.currentThread().interrupt();
+            }
+        }
     }
 }
