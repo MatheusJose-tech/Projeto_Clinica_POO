@@ -12,9 +12,8 @@ public abstract class Pessoa implements Serializable {
     private final String cpf;
 
     protected Pessoa(String nome, String cpf) throws DadosInvalidosException {
-        validarNome(nome);
+        setNome(nome);
         validarCpf(cpf);
-        this.nome = nome.trim();
         this.cpf = cpf;
     }
 
@@ -40,7 +39,7 @@ public abstract class Pessoa implements Serializable {
 
     public void setNome(String nome) throws DadosInvalidosException {
         validarNome(nome);
-        this.nome = nome.trim();
+        this.nome = nome.trim().replaceAll("\\s+", " ");
     }
 
     public String getCpf() {
