@@ -242,7 +242,7 @@ public class ClinicaFacade {
                     continue;
                 }
                 try {
-                    creator.validarElegibilidade(paciente, dia, historico);
+                    creator.validarElegibilidade(paciente, null, dia, historico);
                     disponivel = true;
                     break;
                 } catch (ClinicaException e) {
@@ -257,7 +257,7 @@ public class ClinicaFacade {
             } else {
                 if (motivoIndisponivel == null) {
                     try {
-                        creator.validarElegibilidade(paciente, hoje, historico);
+                        creator.validarElegibilidade(paciente, null, hoje, historico);
                     } catch (ClinicaException e) {
                         motivoIndisponivel = e.getMessage();
                     }
@@ -289,7 +289,7 @@ public class ClinicaFacade {
                 continue;
             }
             try {
-                creator.validarElegibilidade(paciente, dia, historico);
+                creator.validarElegibilidade(paciente, profissional, dia, historico);
             } catch (ClinicaException e) {
                 continue;
             }
@@ -332,7 +332,7 @@ public class ClinicaFacade {
                 continue;
             }
             try {
-                creator.validarElegibilidade(consulta.getPaciente(), dia, historico);
+                creator.validarElegibilidade(consulta.getPaciente(), consulta.getProfissional(), dia, historico);
             } catch (ClinicaException e) {
                 continue;
             }
@@ -414,7 +414,8 @@ public class ClinicaFacade {
 
         ConsultaCreator creator = obterCreator(consulta.getTipo());
         List<Consulta> historico = listarHistoricoSemConsulta(id);
-        creator.validarElegibilidade(consulta.getPaciente(), novaDataHora.toLocalDate(), historico);
+        creator.validarElegibilidade(consulta.getPaciente(), consulta.getProfissional(), novaDataHora.toLocalDate(),
+                historico);
 
         LocalDateTime fimNova = novaDataHora.plusMinutes(consulta.getDuracao());
         if (existeConflitoHorario(consulta.getPaciente().getCpf(), consulta.getProfissional().getCpf(),
