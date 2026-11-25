@@ -270,7 +270,7 @@ public class ClinicaFacade {
     }
 
     public List<LocalDate> listarDiasDisponiveis(String tipo, String cpfPaciente, String cpfProfissional)
-            throws DadosInvalidosException {
+            throws ClinicaException {
         ConsultaCreator creator = obterCreator(tipo);
         Paciente paciente = buscarPacientePorCpf(cpfPaciente);
         Profissional profissional = buscarProfissionalPorCpf(cpfProfissional);
@@ -282,6 +282,8 @@ public class ClinicaFacade {
         List<Consulta> historico = consultaRepo.listar();
         LocalDate hoje = LocalDate.now();
         List<LocalDate> dias = new ArrayList<>();
+        boolean elegivelEmAlgumDia = false;
+        ClinicaException primeiroErroElegibilidade = null;
 
         for (int i = 0; i < configuracaoAgenda.getDiasAntecedencia(); i++) {
             LocalDate dia = hoje.plusDays(i);
@@ -290,13 +292,21 @@ public class ClinicaFacade {
             }
             try {
                 creator.validarElegibilidade(paciente, profissional, dia, historico);
+                elegivelEmAlgumDia = true;
             } catch (ClinicaException e) {
+                if (primeiroErroElegibilidade == null) {
+                    primeiroErroElegibilidade = e;
+                }
                 continue;
             }
             if (!calcularHorariosLivres(paciente.getCpf(), profissional.getCpf(), creator.getDuracao(), dia, -1)
                     .isEmpty()) {
                 dias.add(dia);
             }
+        }
+
+        if (dias.isEmpty() && !elegivelEmAlgumDia && primeiroErroElegibilidade != null) {
+            throw primeiroErroElegibilidade;
         }
 
         return dias;
