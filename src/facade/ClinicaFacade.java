@@ -90,7 +90,8 @@ public class ClinicaFacade {
             if (!profissionalExistente.getNome().equalsIgnoreCase(normalizarNome(nome))) {
                 throw new DadosInvalidosException(
                         "Este CPF já está cadastrado como profissional com o nome \""
-                        + profissionalExistente.getNome() + "\". Para cadastrar como paciente, o nome deve ser idêntico.");
+                                + profissionalExistente.getNome()
+                                + "\". Para cadastrar como paciente, o nome deve ser idêntico.");
             }
             nomeParaCadastro = profissionalExistente.getNome();
         }
@@ -161,7 +162,8 @@ public class ClinicaFacade {
             if (!pacienteExistente.getNome().equalsIgnoreCase(normalizarNome(nome))) {
                 throw new DadosInvalidosException(
                         "Este CPF já está cadastrado como paciente com o nome \""
-                        + pacienteExistente.getNome() + "\". Para cadastrar como profissional, o nome deve ser idêntico.");
+                                + pacienteExistente.getNome()
+                                + "\". Para cadastrar como profissional, o nome deve ser idêntico.");
             }
             nomeParaCadastro = pacienteExistente.getNome();
         }
@@ -272,6 +274,11 @@ public class ClinicaFacade {
         ConsultaCreator creator = obterCreator(tipo);
         Paciente paciente = buscarPacientePorCpf(cpfPaciente);
         Profissional profissional = buscarProfissionalPorCpf(cpfProfissional);
+
+        if (paciente.getCpf().equals(profissional.getCpf())) {
+            throw new DadosInvalidosException("Um profissional não pode agendar uma consulta consigo mesmo.");
+        }
+
         List<Consulta> historico = consultaRepo.listar();
         LocalDate hoje = LocalDate.now();
         List<LocalDate> dias = new ArrayList<>();
@@ -286,7 +293,8 @@ public class ClinicaFacade {
             } catch (ClinicaException e) {
                 continue;
             }
-            if (!calcularHorariosLivres(profissional, creator.getDuracao(), dia, -1).isEmpty()) {
+            if (!calcularHorariosLivres(paciente.getCpf(), profissional.getCpf(), creator.getDuracao(), dia, -1)
+                    .isEmpty()) {
                 dias.add(dia);
             }
         }
@@ -294,11 +302,17 @@ public class ClinicaFacade {
         return dias;
     }
 
-    public List<LocalTime> listarHorariosLivres(String tipo, String cpfProfissional, LocalDate dia)
+    public List<LocalTime> listarHorariosLivres(String tipo, String cpfPaciente, String cpfProfissional, LocalDate dia)
             throws DadosInvalidosException {
         ConsultaCreator creator = obterCreator(tipo);
+        Paciente paciente = buscarPacientePorCpf(cpfPaciente);
         Profissional profissional = buscarProfissionalPorCpf(cpfProfissional);
-        return calcularHorariosLivres(profissional, creator.getDuracao(), dia, -1);
+
+        if (paciente.getCpf().equals(profissional.getCpf())) {
+            throw new DadosInvalidosException("Um profissional não pode agendar uma consulta consigo mesmo.");
+        }
+
+        return calcularHorariosLivres(paciente.getCpf(), profissional.getCpf(), creator.getDuracao(), dia, -1);
     }
 
     public List<LocalDate> listarDiasDisponiveisRemarcacao(int idConsulta) throws DadosInvalidosException {
@@ -322,8 +336,8 @@ public class ClinicaFacade {
             } catch (ClinicaException e) {
                 continue;
             }
-            if (!calcularHorariosLivres(consulta.getProfissional(), consulta.getDuracao(), dia, consulta.getId())
-                    .isEmpty()) {
+            if (!calcularHorariosLivres(consulta.getPaciente().getCpf(), consulta.getProfissional().getCpf(),
+                    consulta.getDuracao(), dia, consulta.getId()).isEmpty()) {
                 dias.add(dia);
             }
         }
@@ -337,7 +351,8 @@ public class ClinicaFacade {
         if (consulta == null) {
             throw new DadosInvalidosException("Consulta não encontrada.");
         }
-        return calcularHorariosLivres(consulta.getProfissional(), consulta.getDuracao(), dia, consulta.getId());
+        return calcularHorariosLivres(consulta.getPaciente().getCpf(), consulta.getProfissional().getCpf(),
+                consulta.getDuracao(), dia, consulta.getId());
     }
 
     public Consulta agendar(String tipo, String cpfPaciente, String cpfProfissional, LocalDateTime dataHora)
@@ -345,6 +360,10 @@ public class ClinicaFacade {
         ConsultaCreator creator = obterCreator(tipo);
         Paciente paciente = buscarPacientePorCpf(cpfPaciente);
         Profissional profissional = buscarProfissionalPorCpf(cpfProfissional);
+
+        if (paciente.getCpf().equals(profissional.getCpf())) {
+            throw new DadosInvalidosException("Um profissional não pode agendar uma consulta consigo mesmo.");
+        }
 
         validarDentroDaAgenda(dataHora, creator.getDuracao());
 
@@ -398,8 +417,10 @@ public class ClinicaFacade {
         creator.validarElegibilidade(consulta.getPaciente(), novaDataHora.toLocalDate(), historico);
 
         LocalDateTime fimNova = novaDataHora.plusMinutes(consulta.getDuracao());
-        if (existeConflitoHorario(consulta.getProfissional(), novaDataHora, fimNova, historico, consulta.getId())) {
-            throw new HorarioIndisponivelException("O profissional já possui uma consulta agendada neste horário.");
+        if (existeConflitoHorario(consulta.getPaciente().getCpf(), consulta.getProfissional().getCpf(),
+                novaDataHora, fimNova, historico, consulta.getId())) {
+            throw new HorarioIndisponivelException(
+                    "Conflito de horário: o profissional ou o paciente já possui compromisso neste horário.");
         }
 
         consulta.remarcar(novaDataHora);
@@ -485,8 +506,8 @@ public class ClinicaFacade {
         }
     }
 
-    private List<LocalTime> calcularHorariosLivres(Profissional profissional, int duracaoMinutos, LocalDate dia,
-            int idConsultaIgnorada) {
+    private List<LocalTime> calcularHorariosLivres(String cpfPaciente, String cpfProfissional, int duracaoMinutos,
+            LocalDate dia, int idConsultaIgnorada) {
         List<LocalTime> livres = new ArrayList<>();
         if (dia == null || !configuracaoAgenda.funcionaNoDia(dia)) {
             return livres;
@@ -501,7 +522,8 @@ public class ClinicaFacade {
         while (!inicioSlot.plusMinutes(duracaoMinutos).isAfter(limiteFechamento)) {
             LocalDateTime fimSlot = inicioSlot.plusMinutes(duracaoMinutos);
             if (inicioSlot.isAfter(agora)
-                    && !existeConflitoHorario(profissional, inicioSlot, fimSlot, historico, idConsultaIgnorada)) {
+                    && !existeConflitoHorario(cpfPaciente, cpfProfissional, inicioSlot, fimSlot, historico,
+                            idConsultaIgnorada)) {
                 livres.add(inicioSlot.toLocalTime());
             }
             inicioSlot = inicioSlot.plusMinutes(intervalo);
@@ -510,8 +532,8 @@ public class ClinicaFacade {
         return livres;
     }
 
-    private boolean existeConflitoHorario(Profissional profissional, LocalDateTime inicioNova, LocalDateTime fimNova,
-            List<Consulta> historico, int idConsultaIgnorada) {
+    private boolean existeConflitoHorario(String cpfPaciente, String cpfProfissional, LocalDateTime inicioNova,
+            LocalDateTime fimNova, List<Consulta> historico, int idConsultaIgnorada) {
         for (Consulta existente : historico) {
             if (existente.getId() == idConsultaIgnorada) {
                 continue;
@@ -519,13 +541,25 @@ public class ClinicaFacade {
             if (existente.getStatus() != StatusConsulta.AGENDADA) {
                 continue;
             }
-            if (!existente.getProfissional().getCpf().equals(profissional.getCpf())) {
-                continue;
-            }
 
             LocalDateTime inicioExistente = existente.getDataHora();
             LocalDateTime fimExistente = inicioExistente.plusMinutes(existente.getDuracao());
-            if (inicioNova.isBefore(fimExistente) && fimNova.isAfter(inicioExistente)) {
+            boolean sobreposicao = inicioNova.isBefore(fimExistente) && fimNova.isAfter(inicioExistente);
+
+            if (!sobreposicao) {
+                continue;
+            }
+
+            String cpfProfExistente = existente.getProfissional().getCpf();
+            String cpfPacExistente = existente.getPaciente().getCpf();
+
+            boolean conflitoProfissional = cpfProfissional != null
+                    && (cpfProfExistente.equals(cpfProfissional) || cpfPacExistente.equals(cpfProfissional));
+
+            boolean conflitoPaciente = cpfPaciente != null
+                    && (cpfPacExistente.equals(cpfPaciente) || cpfProfExistente.equals(cpfPaciente));
+
+            if (conflitoProfissional || conflitoPaciente) {
                 return true;
             }
         }
