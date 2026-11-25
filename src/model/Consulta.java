@@ -6,7 +6,7 @@ import java.time.format.DateTimeFormatter;
 
 import model.exception.DadosInvalidosException;
 
-public abstract class Consulta implements Serializable{
+public abstract class Consulta implements Serializable {
 
     private static final long serialVersionUID = 1L;
     private static final DateTimeFormatter FORMATO = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
@@ -17,29 +17,30 @@ public abstract class Consulta implements Serializable{
     private LocalDateTime dataHora;
     private StatusConsulta status;
 
-    protected Consulta(int id, Paciente paciente, Profissional profissional, LocalDateTime dataHora) throws DadosInvalidosException {
-        
-        if (paciente == null){
+    protected Consulta(int id, Paciente paciente, Profissional profissional, LocalDateTime dataHora)
+            throws DadosInvalidosException {
+
+        if (paciente == null) {
             throw new DadosInvalidosException("O paciente da consulta é obrigatório.");
         }
-        
-        if (profissional == null){
+
+        if (profissional == null) {
             throw new DadosInvalidosException("O profissional da consulta é obrigatório.");
         }
-        
+
         validarDataHora(dataHora);
-        
+
         this.id = id;
-        
+
         this.paciente = paciente;
-        
+
         this.profissional = profissional;
-        
+
         this.dataHora = dataHora;
-        
+
         this.status = StatusConsulta.AGENDADA;
     }
-    
+
     // ---------- Métodos abstratos ----------
 
     public abstract double calcularValor();
@@ -59,9 +60,13 @@ public abstract class Consulta implements Serializable{
 
     public void realizar() throws DadosInvalidosException {
         exigirAgendada("realizada");
+        if (LocalDateTime.now().isBefore(this.dataHora)) {
+            throw new DadosInvalidosException(
+                    "A consulta " + id + " ainda não aconteceu (agendada para " + dataHora.format(FORMATO) + ").");
+        }
         status = StatusConsulta.REALIZADA;
     }
-    
+
     public void remarcar(LocalDateTime novaDataHora) throws DadosInvalidosException {
         exigirAgendada("remarcada");
         validarDataHora(novaDataHora);
@@ -72,14 +77,14 @@ public abstract class Consulta implements Serializable{
         exigirAgendada("cancelada");
         status = StatusConsulta.CANCELADA;
     }
-    
+
     public static void validarDataHora(LocalDateTime dataHora) throws DadosInvalidosException {
         if (dataHora == null) {
             throw new DadosInvalidosException("A data e hora da consulta são obrigatórias.");
         }
     }
     // ---------- Métodos de acesso ----------
-    
+
     public int getId() {
         return id;
     }
@@ -107,4 +112,3 @@ public abstract class Consulta implements Serializable{
                 dataHora.format(FORMATO), status, calcularValor());
     }
 }
-    
