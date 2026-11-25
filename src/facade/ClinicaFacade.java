@@ -539,7 +539,7 @@ public class ClinicaFacade {
             if (existente.getId() == idConsultaIgnorada) {
                 continue;
             }
-            if (existente.getStatus() != StatusConsulta.AGENDADA) {
+            if (existente.getStatus() == StatusConsulta.CANCELADA) {
                 continue;
             }
 
