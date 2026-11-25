@@ -52,7 +52,7 @@ public abstract class ConsultaCreator {
         String cpfPaciente = paciente.getCpf();
 
         for (Consulta existente : historico) {
-            if (existente.getStatus() != StatusConsulta.AGENDADA) {
+            if (existente.getStatus() == StatusConsulta.CANCELADA) {
                 continue;
             }
 
@@ -70,7 +70,7 @@ public abstract class ConsultaCreator {
             // 1. Verifica se o profissional está ocupado (atendendo ou como paciente)
             if (cpfProfExistente.equals(cpfProfissional) || cpfPacExistente.equals(cpfProfissional)) {
                 throw new HorarioIndisponivelException("O profissional " + profissional.getNome()
-                        + " já possui um compromisso agendado que conflita com o horário " + dataHora.format(FORMATO)
+                        + " já possui um compromisso que conflita com o horário " + dataHora.format(FORMATO)
                         + ".");
             }
 
@@ -78,7 +78,7 @@ public abstract class ConsultaCreator {
             // profissional)
             if (cpfPacExistente.equals(cpfPaciente) || cpfProfExistente.equals(cpfPaciente)) {
                 throw new HorarioIndisponivelException("O paciente " + paciente.getNome()
-                        + " já possui um compromisso agendado que conflita com o horário " + dataHora.format(FORMATO)
+                        + " já possui um compromisso que conflita com o horário " + dataHora.format(FORMATO)
                         + ".");
             }
         }
