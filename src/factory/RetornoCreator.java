@@ -71,6 +71,14 @@ public class RetornoCreator extends ConsultaCreator {
     @Override
     protected Consulta criarConsulta(int id, Paciente paciente, Profissional profissional, LocalDateTime dataHora,
             List<Consulta> historico) throws ClinicaException {
+        Consulta ultima = buscarUltimaRealizada(paciente, profissional, historico);
+        if (ultima != null) {
+            LocalDateTime fimUltima = ultima.getDataHora().plusMinutes(ultima.getDuracao());
+            if (dataHora.isBefore(fimUltima)) {
+                throw new RetornoForaDoPrazoException(
+                        "O retorno deve ser marcado após o término da última consulta realizada.");
+            }
+        }
         return new ConsultaRetorno(id, paciente, profissional, dataHora);
     }
 
