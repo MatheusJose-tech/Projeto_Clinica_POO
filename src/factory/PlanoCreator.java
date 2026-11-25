@@ -20,7 +20,8 @@ public class PlanoCreator extends ConsultaCreator {
     }
 
     @Override
-    public void validarElegibilidade(Paciente paciente, LocalDate data, List<Consulta> historico) throws ClinicaException {
+    public void validarElegibilidade(Paciente paciente, Profissional profissional, LocalDate data,
+            List<Consulta> historico) throws ClinicaException {
         if (paciente == null) {
             throw new DadosInvalidosException("O paciente da consulta é obrigatório.");
         }
@@ -28,12 +29,14 @@ public class PlanoCreator extends ConsultaCreator {
             throw new DadosInvalidosException("A data da consulta é obrigatória.");
         }
         if (!paciente.temPlano()) {
-            throw new DadosInvalidosException("O paciente " + paciente.getNome() + " não possui plano de saúde cadastrado.");
+            throw new DadosInvalidosException(
+                    "O paciente " + paciente.getNome() + " não possui plano de saúde cadastrado.");
         }
     }
 
     @Override
-    protected Consulta criarConsulta(int id, Paciente paciente, Profissional profissional, LocalDateTime dataHora, List<Consulta> historico) throws ClinicaException {
+    protected Consulta criarConsulta(int id, Paciente paciente, Profissional profissional, LocalDateTime dataHora,
+            List<Consulta> historico) throws ClinicaException {
         return new ConsultaPlano(id, paciente, profissional, dataHora);
     }
 }
