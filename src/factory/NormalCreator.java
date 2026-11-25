@@ -20,7 +20,8 @@ public class NormalCreator extends ConsultaCreator {
     }
 
     @Override
-    public void validarElegibilidade(Paciente paciente, LocalDate data, List<Consulta> historico) throws ClinicaException {
+    public void validarElegibilidade(Paciente paciente, Profissional profissional, LocalDate data,
+            List<Consulta> historico) throws ClinicaException {
         if (paciente == null) {
             throw new DadosInvalidosException("O paciente da consulta é obrigatório.");
         }
@@ -30,7 +31,8 @@ public class NormalCreator extends ConsultaCreator {
     }
 
     @Override
-    protected Consulta criarConsulta(int id, Paciente paciente, Profissional profissional, LocalDateTime dataHora, List<Consulta> historico) throws ClinicaException {
+    protected Consulta criarConsulta(int id, Paciente paciente, Profissional profissional, LocalDateTime dataHora,
+            List<Consulta> historico) throws ClinicaException {
         return new ConsultaNormal(id, paciente, profissional, dataHora);
     }
 }

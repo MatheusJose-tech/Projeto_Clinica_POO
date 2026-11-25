@@ -24,7 +24,8 @@ public class RetornoCreator extends ConsultaCreator {
     }
 
     @Override
-    public void validarElegibilidade(Paciente paciente, LocalDate data, List<Consulta> historico) throws ClinicaException {
+    public void validarElegibilidade(Paciente paciente, Profissional profissional, LocalDate data,
+            List<Consulta> historico) throws ClinicaException {
         if (paciente == null) {
             throw new DadosInvalidosException("O paciente da consulta é obrigatório.");
         }
@@ -33,14 +34,25 @@ public class RetornoCreator extends ConsultaCreator {
             throw new DadosInvalidosException("A data da consulta é obrigatória.");
         }
 
-        Consulta ultima = buscarUltimaRealizada(paciente, historico);
+        Consulta ultimaGeral = buscarUltimaRealizada(paciente, null, historico);
+        if (ultimaGeral == null) {
+            throw new RetornoForaDoPrazoException(
+                    "O paciente " + paciente.getNome() + " não tem nenhuma consulta realizada para ter retorno.");
+        }
+
+        Consulta ultima = (profissional != null)
+                ? buscarUltimaRealizada(paciente, profissional, historico)
+                : ultimaGeral;
 
         if (ultima == null) {
-            throw new RetornoForaDoPrazoException("O paciente " + paciente.getNome() + " não tem nenhuma consulta realizada para ter retorno.");
+            throw new DadosInvalidosException(
+                    "A consulta de retorno deve ser marcada com o mesmo profissional da consulta realizada (último atendimento com "
+                            + ultimaGeral.getProfissional().getNome() + ").");
         }
 
         if (possuiRetornoParaConsulta(paciente, ultima, historico)) {
-            throw new DadosInvalidosException("O paciente " + paciente.getNome() + " já possui um retorno agendado ou realizado para a última consulta.");
+            throw new DadosInvalidosException("O paciente " + paciente.getNome()
+                    + " já possui um retorno agendado ou realizado para esta consulta.");
         }
 
         LocalDate dataUltima = ultima.getDataHora().toLocalDate();
@@ -57,25 +69,25 @@ public class RetornoCreator extends ConsultaCreator {
     }
 
     @Override
-    protected Consulta criarConsulta(int id, Paciente paciente, Profissional profissional, LocalDateTime dataHora, List<Consulta> historico) throws ClinicaException {
+    protected Consulta criarConsulta(int id, Paciente paciente, Profissional profissional, LocalDateTime dataHora,
+            List<Consulta> historico) throws ClinicaException {
         return new ConsultaRetorno(id, paciente, profissional, dataHora);
     }
 
-    // Busca a última consulta realizada do paciente no histórico. Retorna null se não houver nenhuma consulta realizada.
-
-    private Consulta buscarUltimaRealizada(Paciente paciente, List<Consulta> historico) { 
-        
+    private Consulta buscarUltimaRealizada(Paciente paciente, Profissional profissional, List<Consulta> historico) {
         Consulta ultima = null;
-        
+
         if (historico == null) {
             return null;
         }
-        
+
         for (Consulta c : historico) {
-            
             boolean mesmoPaciente = c.getPaciente().getCpf().equals(paciente.getCpf());
-            
-            if (mesmoPaciente && !(c instanceof ConsultaRetorno) && c.getStatus() == StatusConsulta.REALIZADA
+            boolean mesmoProfissional = (profissional == null)
+                    || c.getProfissional().getCpf().equals(profissional.getCpf());
+
+            if (mesmoPaciente && mesmoProfissional && !(c instanceof ConsultaRetorno)
+                    && c.getStatus() == StatusConsulta.REALIZADA
                     && (ultima == null || c.getDataHora().isAfter(ultima.getDataHora()))) {
                 ultima = c;
             }
@@ -90,9 +102,11 @@ public class RetornoCreator extends ConsultaCreator {
 
         for (Consulta c : historico) {
             boolean mesmoPaciente = c.getPaciente().getCpf().equals(paciente.getCpf());
+            boolean mesmoProfissional = c.getProfissional().getCpf()
+                    .equals(ultimaRealizada.getProfissional().getCpf());
             boolean ehRetornoAtivo = (c instanceof ConsultaRetorno) && c.getStatus() != StatusConsulta.CANCELADA;
 
-            if (mesmoPaciente && ehRetornoAtivo
+            if (mesmoPaciente && mesmoProfissional && ehRetornoAtivo
                     && !c.getDataHora().isBefore(ultimaRealizada.getDataHora())) {
                 return true;
             }

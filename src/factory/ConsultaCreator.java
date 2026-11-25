@@ -23,15 +23,15 @@ public abstract class ConsultaCreator {
         }
 
         validarHorario(paciente, profissional, dataHora, historico);
-        validarElegibilidade(paciente, dataHora.toLocalDate(), historico);
+        validarElegibilidade(paciente, profissional, dataHora.toLocalDate(), historico);
 
         return criarConsulta(id, paciente, profissional, dataHora, historico);
     }
 
     public abstract int getDuracao();
 
-    public abstract void validarElegibilidade(Paciente paciente, LocalDate data, List<Consulta> historico)
-            throws ClinicaException;
+    public abstract void validarElegibilidade(Paciente paciente, Profissional profissional, LocalDate data,
+            List<Consulta> historico) throws ClinicaException;
 
     protected abstract Consulta criarConsulta(int id, Paciente paciente, Profissional profissional,
             LocalDateTime dataHora, List<Consulta> historico) throws ClinicaException;
