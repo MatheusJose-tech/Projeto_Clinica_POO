@@ -12,6 +12,7 @@ import model.Profissional;
 import model.Relatorio;
 import model.exception.ClinicaException;
 import model.exception.DadosInvalidosException;
+
 public class ConsultaController {
     private final ClinicaFacade facade;
 
@@ -36,9 +37,9 @@ public class ConsultaController {
         return facade.listarDiasDisponiveis(tipo, cpfPaciente, cpfProfissional);
     }
 
-    public List<LocalTime> listarHorariosLivres(String tipo, String cpfProfissional, LocalDate dia)
+    public List<LocalTime> listarHorariosLivres(String tipo, String cpfPaciente, String cpfProfissional, LocalDate dia)
             throws ClinicaException {
-        return facade.listarHorariosLivres(tipo, cpfProfissional, dia);
+        return facade.listarHorariosLivres(tipo, cpfPaciente, cpfProfissional, dia);
     }
 
     public List<LocalDate> listarDiasDisponiveisRemarcacao(int idConsulta) throws ClinicaException {
@@ -57,11 +58,10 @@ public class ConsultaController {
     public void cancelar(int id) throws ClinicaException {
         facade.cancelarConsulta(id);
     }
-    
+
     public void realizar(int id) throws ClinicaException {
         facade.realizarConsulta(id);
     }
-
 
     public List<Consulta> listar() {
         return facade.listarConsultas();

@@ -153,7 +153,7 @@ public class ConsultaView {
         }
         LocalDate diaEscolhido = dias.get(idxDia);
 
-        List<LocalTime> horarios = controller.listarHorariosLivres(tipo, cpfProfissional, diaEscolhido);
+        List<LocalTime> horarios = controller.listarHorariosLivres(tipo, cpfPaciente, cpfProfissional, diaEscolhido);
 
         if (horarios.isEmpty()) {
             System.out.println("Não há horários livres neste dia.");
