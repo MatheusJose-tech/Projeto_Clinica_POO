@@ -27,11 +27,11 @@ import repository.ConsultaRepository;
 import repository.PacienteRepository;
 import repository.ProfissionalRepository;
 import repository.UsuarioRepository;
+import service.CadastroService;
 
 public class ClinicaFacade {
 
-    private PacienteRepository pacienteRepo;
-    private ProfissionalRepository profissionalRepo;
+    private CadastroService cadastroService;
     private ConsultaRepository consultaRepo;
     private UsuarioRepository usuarioRepo;
     private ConfiguracaoAgenda configuracaoAgenda;
@@ -47,8 +47,7 @@ public class ClinicaFacade {
             ConsultaRepository consultaRepo,
             UsuarioRepository usuarioRepo,
             ConfiguracaoAgenda configuracaoAgenda) {
-        this.pacienteRepo = pacienteRepo;
-        this.profissionalRepo = profissionalRepo;
+        this.cadastroService = new CadastroService(pacienteRepo, profissionalRepo, consultaRepo);
         this.consultaRepo = consultaRepo;
         this.usuarioRepo = usuarioRepo;
         this.configuracaoAgenda = configuracaoAgenda != null ? configuracaoAgenda : new ConfiguracaoAgenda();
@@ -78,151 +77,43 @@ public class ClinicaFacade {
     }
 
     public void cadastrarPaciente(String nome, String cpf, String plano) throws DadosInvalidosException {
-        String cpfLimpo = cpf != null ? cpf.trim() : null;
-
-        if (pacienteRepo.buscarPorCpf(cpfLimpo) != null) {
-            throw new DadosInvalidosException("Já existe um paciente cadastrado com este CPF.");
-        }
-
-        String nomeParaCadastro = nome;
-        Profissional profissionalExistente = profissionalRepo.buscarPorCpf(cpfLimpo);
-        if (profissionalExistente != null) {
-            if (!profissionalExistente.getNome().equalsIgnoreCase(normalizarNome(nome))) {
-                throw new DadosInvalidosException(
-                        "Este CPF já está cadastrado como profissional com o nome \""
-                                + profissionalExistente.getNome()
-                                + "\". Para cadastrar como paciente, o nome deve ser idêntico.");
-            }
-            nomeParaCadastro = profissionalExistente.getNome();
-        }
-
-        Paciente novoPaciente = new Paciente(nomeParaCadastro, cpfLimpo, plano);
-        pacienteRepo.salvar(novoPaciente);
+        cadastroService.cadastrarPaciente(nome, cpf, plano);
     }
 
     public Paciente buscarPacientePorCpf(String cpf) throws DadosInvalidosException {
-        if (cpf == null || cpf.isBlank()) {
-            throw new DadosInvalidosException("O CPF do paciente é obrigatório.");
-        }
-        Paciente paciente = pacienteRepo.buscarPorCpf(cpf.trim());
-        if (paciente == null) {
-            throw new DadosInvalidosException("Paciente não encontrado.");
-        }
-        return paciente;
+        return cadastroService.buscarPacientePorCpf(cpf);
     }
 
     public List<Paciente> listarPacientes() {
-        return pacienteRepo.listar();
+        return cadastroService.listarPacientes();
     }
 
     public void alterarPaciente(String cpf, String nome, String plano) throws DadosInvalidosException {
-        Paciente paciente = pacienteRepo.buscarPorCpf(cpf);
-        if (paciente == null) {
-            throw new DadosInvalidosException("Paciente não encontrado.");
-        }
-
-        paciente.setNome(nome);
-        paciente.setPlano(plano);
-        pacienteRepo.salvar(paciente);
-
-        Profissional profissionalVinculado = profissionalRepo.buscarPorCpf(paciente.getCpf());
-        if (profissionalVinculado != null && !profissionalVinculado.getNome().equals(paciente.getNome())) {
-            profissionalVinculado.setNome(paciente.getNome());
-            profissionalRepo.salvar(profissionalVinculado);
-        }
+        cadastroService.alterarPaciente(cpf, nome, plano);
     }
 
     public void removerPaciente(String cpf) throws DadosInvalidosException {
-        Paciente paciente = pacienteRepo.buscarPorCpf(cpf);
-        if (paciente == null) {
-            throw new DadosInvalidosException("Paciente não encontrado.");
-        }
-
-        for (Consulta c : consultaRepo.listar()) {
-            if (c.getStatus() == StatusConsulta.AGENDADA
-                    && c.getPaciente().getCpf().equals(paciente.getCpf())) {
-                throw new DadosInvalidosException(
-                        "Não é possível remover o paciente: existem consultas agendadas vinculadas a ele.");
-            }
-        }
-
-        pacienteRepo.remover(cpf);
+        cadastroService.removerPaciente(cpf);
     }
 
     public void cadastrarProfissional(String nome, String cpf, String especialidade) throws DadosInvalidosException {
-        String cpfLimpo = cpf != null ? cpf.trim() : null;
-
-        if (profissionalRepo.buscarPorCpf(cpfLimpo) != null) {
-            throw new DadosInvalidosException("Já existe um profissional cadastrado com este CPF.");
-        }
-
-        String nomeParaCadastro = nome;
-        Paciente pacienteExistente = pacienteRepo.buscarPorCpf(cpfLimpo);
-        if (pacienteExistente != null) {
-            if (!pacienteExistente.getNome().equalsIgnoreCase(normalizarNome(nome))) {
-                throw new DadosInvalidosException(
-                        "Este CPF já está cadastrado como paciente com o nome \""
-                                + pacienteExistente.getNome()
-                                + "\". Para cadastrar como profissional, o nome deve ser idêntico.");
-            }
-            nomeParaCadastro = pacienteExistente.getNome();
-        }
-
-        Profissional novoProfissional = new Profissional(nomeParaCadastro, cpfLimpo, especialidade);
-        profissionalRepo.salvar(novoProfissional);
+        cadastroService.cadastrarProfissional(nome, cpf, especialidade);
     }
 
     public Profissional buscarProfissionalPorCpf(String cpf) throws DadosInvalidosException {
-        if (cpf == null || cpf.isBlank()) {
-            throw new DadosInvalidosException("O CPF do profissional é obrigatório.");
-        }
-        Profissional profissional = profissionalRepo.buscarPorCpf(cpf.trim());
-        if (profissional == null) {
-            throw new DadosInvalidosException("Profissional não encontrado.");
-        }
-        return profissional;
+        return cadastroService.buscarProfissionalPorCpf(cpf);
     }
 
     public List<Profissional> listarProfissionais() {
-        return profissionalRepo.listar();
+        return cadastroService.listarProfissionais();
     }
 
     public void alterarProfissional(String cpf, String nome, String especialidade) throws DadosInvalidosException {
-        Profissional profissional = profissionalRepo.buscarPorCpf(cpf);
-        if (profissional == null) {
-            throw new DadosInvalidosException("Profissional não encontrado.");
-        }
-
-        profissional.setNome(nome);
-        profissional.setEspecialidade(especialidade);
-        profissionalRepo.salvar(profissional);
-
-        Paciente pacienteVinculado = pacienteRepo.buscarPorCpf(profissional.getCpf());
-        if (pacienteVinculado != null && !pacienteVinculado.getNome().equals(profissional.getNome())) {
-            pacienteVinculado.setNome(profissional.getNome());
-            pacienteRepo.salvar(pacienteVinculado);
-        }
+        cadastroService.alterarProfissional(cpf, nome, especialidade);
     }
 
     public void removerProfissional(String cpf) throws DadosInvalidosException {
-        Profissional profissional = profissionalRepo.buscarPorCpf(cpf);
-        if (profissional == null) {
-            throw new DadosInvalidosException("Profissional não encontrado.");
-        }
-
-        for (Consulta c : consultaRepo.listar()) {
-            if (c.getStatus() == StatusConsulta.AGENDADA
-                    && c.getProfissional().getCpf().equals(profissional.getCpf())) {
-                throw new DadosInvalidosException(
-                        "Não é possível remover o profissional: existem consultas agendadas vinculadas a ele.");
-            }
-        }
-
-        profissionalRepo.remover(cpf);
-    }
-
-    private String normalizarNome(String nome) {
-        return nome == null ? "" : nome.trim().replaceAll("\\s+", " ");
+        cadastroService.removerProfissional(cpf);
     }
 
     public Map<String, String> listarTiposDisponiveis(String cpfPaciente) throws DadosInvalidosException {
