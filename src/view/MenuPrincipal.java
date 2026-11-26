@@ -26,7 +26,6 @@ public class MenuPrincipal {
             System.out.println("1 - Pacientes");
             System.out.println("2 - Profissionais");
             System.out.println("3 - Consultas");
-            System.out.println("4 - Relatório por profissional");
             System.out.println("0 - Sair");
             opcao = leitor.lerOpcao("Escolha uma opção: ");
 
@@ -34,17 +33,13 @@ public class MenuPrincipal {
                 case 1 -> pacienteView.exibirMenu();
                 case 2 -> profissionalView.exibirMenu();
                 case 3 -> consultaView.exibirMenu();
-                case 4 -> {
-                    consultaView.exibirRelatorio();
-                    leitor.pausar();
-                }
                 case 0 -> {
                     System.out.println("Encerrando o sistema...");
                     leitor.pausar();
                     leitor.limparTela();
                 }
                 default -> {
-                    System.out.println("Opção inválida. Digite um número de 0 a 4.");
+                    System.out.println("Opção inválida. Digite um número de 0 a 3.");
                     leitor.pausar();
                 }
             }
